@@ -35,7 +35,6 @@ class TokenEmbedding(nn.Module):
         return self.dropout(x)
 
 
-# then MaskGITTransformer follows below...
 class MaskGITTransformer(nn.Module):
     def __init__(
         self,
@@ -45,7 +44,7 @@ class MaskGITTransformer(nn.Module):
         n_heads    : int,
         n_layers   : int,
         d_ff       : int,
-        n_classes  : int   = 10,    # 0 = unconditional, 10 = MNIST
+        n_classes  : int   = 10,   
         dropout    : float = 0.1,
     ):
         super().__init__()
@@ -53,11 +52,11 @@ class MaskGITTransformer(nn.Module):
         self.seq_len    = seq_len
         self.MASK_ID    = vocab_size
         self.n_classes  = n_classes
-        self.NULL_CLASS = n_classes  # extra slot for dropped labels
+        self.NULL_CLASS = n_classes  
 
         self.embedding = TokenEmbedding(vocab_size, d_model, seq_len, dropout)
 
-        # Label conditioning — only if n_classes > 0
+        
         if n_classes > 0:
             self.label_emb = nn.Embedding(n_classes + 1, d_model)
         else:
@@ -87,7 +86,7 @@ class MaskGITTransformer(nn.Module):
             labels        : (B,) — digit class 0-9, None if unconditional
             drop_label    : (B,) bool — True = use NULL_CLASS (CFG dropout)
         """
-        x = self.embedding(masked_tokens)              # (B, L, d_model)
+        x = self.embedding(masked_tokens)             
 
         # Add label conditioning if provided
         if self.label_emb is not None and labels is not None:
@@ -97,8 +96,8 @@ class MaskGITTransformer(nn.Module):
                     torch.full_like(labels, self.NULL_CLASS),
                     labels
                 )
-            label_vec = self.label_emb(labels)         # (B, d_model)
-            x = x + label_vec.unsqueeze(1)             # broadcast over L
+            label_vec = self.label_emb(labels)         
+            x = x + label_vec.unsqueeze(1)             
 
         x      = self.transformer(x)
         logits = self.head(x)
