@@ -17,7 +17,7 @@ CHECKPOINT_PATH = os.path.join(OUTPUT_DIR, "maskgit_cond.pt")
 def train(
     vocab_size      : int   = 128,
     seq_len         : int   = 49,
-    n_classes       : int   = 10,    # ← NEW
+    n_classes       : int   = 10,    
     d_model         : int   = 128,
     n_heads         : int   = 4,
     n_layers        : int   = 4,
@@ -27,7 +27,7 @@ def train(
     batch_size      : int   = 128,
     lr              : float = 3e-4,
     sched_mode      : str   = "arccos",
-    label_drop_prob : float = 0.1,   # ← NEW: 10% of batches drop the label
+    label_drop_prob : float = 0.1,  
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training on : {device}")
@@ -37,7 +37,7 @@ def train(
 
     model = MaskGITTransformer(
         vocab_size=vocab_size, seq_len=seq_len,
-        n_classes=n_classes,             # ← NEW
+        n_classes=n_classes,             
         d_model=d_model, n_heads=n_heads,
         n_layers=n_layers, d_ff=d_ff, dropout=dropout,
     ).to(device)
@@ -51,7 +51,7 @@ def train(
         model.train()
         total_loss = total_correct = total_masked = 0
 
-        for tokens, labels in loader:        # ← unpack tuple
+        for tokens, labels in loader:       
             tokens = tokens.to(device)
             labels = labels.to(device)
 
@@ -63,7 +63,7 @@ def train(
             # model learns both p(image|class) and p(image) simultaneously
             drop_label = torch.rand(len(tokens), device=device) < label_drop_prob
 
-            logits = model(masked_tokens, labels, drop_label)   # (B, L, vocab+1)
+            logits = model(masked_tokens, labels, drop_label)  
 
             target = tokens.clone()
             target[~mask] = -100
