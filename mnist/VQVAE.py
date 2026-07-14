@@ -11,22 +11,6 @@ transform = transforms.Compose([transforms.ToTensor()])
 
 
 class VectorQuantizerEMA(nn.Module):
-    """
-    Vector Quantizer with Exponential Moving Average (EMA) codebook updates
-    and dead code restart.
-
-    Key differences from original:
-        1. Codebook updated via EMA, not gradients
-           → more stable, avoids codebook collapse
-        2. Dead codes (unused for > threshold batches) get reset
-           → breaks the rich-get-richer feedback loop
-        3. Encoder output L2-normalized before quantization
-           → all codes compete on equal footing
-
-    Paper reference:
-        "Neural Discrete Representation Learning" (van den Oord et al. 2017)
-        EMA update variant from Appendix A.1
-    """
 
     def __init__(self, num_embeddings, embedding_dim, beta=0.25,
                  decay=0.99, epsilon=1e-5, dead_code_threshold=1.0):
@@ -38,7 +22,7 @@ class VectorQuantizerEMA(nn.Module):
         self.epsilon             = epsilon
         self.dead_code_threshold = dead_code_threshold
 
-        # Codebook — not a parameter, updated via EMA
+        
         embed = torch.randn(num_embeddings, embedding_dim)
         self.register_buffer("embedding",    embed)
         self.register_buffer("cluster_size", torch.ones(num_embeddings))
@@ -48,10 +32,10 @@ class VectorQuantizerEMA(nn.Module):
         # z: (B, C, H, W)
         B, C, H, W = z.shape
 
-        # Normalize encoder output — helps all codes compete fairly
+        
         z_normalized = F.normalize(z, dim=1)
 
-        # Flatten to (B*H*W, C)
+        
         z_flat = z_normalized.permute(0, 2, 3, 1).contiguous().view(-1, C)
 
         # Distances to codebook
@@ -71,7 +55,7 @@ class VectorQuantizerEMA(nn.Module):
         z_q = (encodings @ self.embedding).view(B, H, W, C)
         z_q = z_q.permute(0, 3, 1, 2).contiguous()       # (B, C, H, W)
 
-        # ── EMA codebook update (training only) ───────────────────────────
+        # ── EMA codebook update ───────────────────────────
         if self.training:
             # Update cluster sizes
             cluster_size = encodings.sum(0)               # (num_embeddings,)
@@ -87,7 +71,7 @@ class VectorQuantizerEMA(nn.Module):
                 + (1 - self.decay) * embed_sum
             )
 
-            # Laplace smoothing for stability
+        
             n = self.cluster_size.sum()
             smoothed = (
                 (self.cluster_size + self.epsilon)
@@ -110,7 +94,7 @@ class VectorQuantizerEMA(nn.Module):
                 self.embed_avg[dead_codes]  = random_encodings
                 self.cluster_size[dead_codes] = self.dead_code_threshold
 
-        # Commitment loss only (codebook updated via EMA, not gradients)
+        
         loss = self.beta * F.mse_loss(z_q.detach(), z_normalized)
 
         # Straight-through estimator
@@ -123,8 +107,8 @@ class Encoder(nn.Module):
     def __init__(self, in_channels=1, hidden_dim=64):
         super().__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_channels, hidden_dim, 4, 2, 1),   # 28→14
-            nn.GroupNorm(8, hidden_dim),                    # more stable than BatchNorm
+            nn.Conv2d(in_channels, hidden_dim, 4, 2, 1),  
+            nn.GroupNorm(8, hidden_dim),                   
             nn.ReLU(),
             nn.Conv2d(hidden_dim, hidden_dim, 4, 2, 1),   # 14→7
             nn.GroupNorm(8, hidden_dim),
@@ -132,7 +116,7 @@ class Encoder(nn.Module):
             nn.Conv2d(hidden_dim, hidden_dim, 3, 1, 1),   # 7→7, refine
             nn.GroupNorm(8, hidden_dim),
             nn.ReLU(),
-            nn.Conv2d(hidden_dim, hidden_dim, 1),          # pointwise projection
+            nn.Conv2d(hidden_dim, hidden_dim, 1),          
         )
 
     def forward(self, x):
@@ -176,7 +160,7 @@ class VQVAE(nn.Module):
 def encode_to_tokens(model, x):
     with torch.no_grad():
         z = model.encoder(x)
-        # normalize before quantization, matching VectorQuantizerEMA
+        # normalize before quantization
         z_normalized = F.normalize(z, dim=1)
         _, _, indices = model.vq(z_normalized.unsqueeze(0).squeeze(0))
     return indices.view(x.shape[0], -1)
