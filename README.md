@@ -7,7 +7,7 @@ A PyTorch implementation of **MaskedGIT (Masked Generative Image Transformer)** 
 ```text
 maskgit/
 ├── README.md                    # Project overview
-├── synthetic/                   # Constant & Copy tasks
+├── Synthetic Tasks (Constant & Copy Tasks)/                   # Constant & Copy tasks
 │   ├── data.py
 │   ├── model.py
 │   ├── train.py
