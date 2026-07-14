@@ -6,26 +6,23 @@ A PyTorch implementation of **MaskedGIT (Masked Generative Image Transformer)** 
 
 ```text
 maskgit/
-│
-├── README.md                    # Project overview, methodology, and results
-│
-├── Synthetic Tasks (Constant & Copy Tasks)/                   # Synthetic toy tasks for validating the algorithm
-│   ├── data.py                  # ConstantDataset, CopyDataset
-│   ├── model.py                 # MaskGIT Transformer
-│   ├── train.py                 # Training loop
-│   ├── generate.py              # Iterative parallel decoding
-│   └── utils.py                 # Mask scheduling and confidence-based remasking
-│
+├── README.md                    # Project overview
+├── synthetic/                   # Constant & Copy tasks
+│   ├── data.py
+│   ├── model.py
+│   ├── train.py
+│   ├── generate.py
+│   └── utils.py
 ├── mnist/                       # MNIST experiments
-│   ├── VQVAE.py                 # VQ-VAE with EMA updates and dead-code replacement
-│   ├── mnist_vqvae_data.py      # Data loader
-│   ├── model.py                 # MaskGIT model
-│   ├── train.py                 # Training
-│   ├── generate_and_decode.py   # Image generation and VQ-VAE decoding
-│   └── mnist_trial_results.ipynb # Notebook to show results
-
-
+│   ├── VQVAE.py
+│   ├── mnist_vqvae_data.py
+│   ├── model.py
+│   ├── train.py
+│   ├── generate_and_decode.py
+│   └── mnist_trial_results.ipynb
+└── results/                     # Generated figures
 ```
+
 
 ## Features
 
